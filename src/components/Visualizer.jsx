@@ -28,31 +28,30 @@ export default class Visualizer extends React.Component {
     }
   };
 
-  sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
-
-  bubbleSort = async () => {
+  insertionSort = async () => {
     const array = this.state.array.slice(); 
 
-    for (let i = 0; i < array.length - 1; i++) {
-      for (let j = 0; j < array.length - i - 1; j++) {
-        if (array[j] > array[j + 1]) {
-          [array[j], array[j + 1]] = [array[j + 1], array[j]];
+    for (let i = 1; i < array.length; i++) {
+      let j = i - 1;
+      let value = array[i];
+      
+      while (j >= 0 && array[j] > value) {
+        array[j + 1] = array[j];
+        j = j - 1;
 
-          this.setState({ array });
-          await this.sleep(50); 
-        }
+        this.setState({ array });
+        await this.sleep(50); 
       }
+      
+      array[j + 1] = value;
+      this.setState({ array });
+      await this.sleep(50); 
     }
   };
 
   sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
-
-
-
 
   getRandomInt(min, max) {
     min = Math.ceil(min);
@@ -71,6 +70,7 @@ export default class Visualizer extends React.Component {
           </div>
         ))}
         <button onClick={this.bubbleSort}>Start Bubble Sort</button>
+        <button onClick={this.insertionSort}>Start Insertion Sort</button>
       </div>
     );
   }
