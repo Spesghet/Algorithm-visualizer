@@ -52,7 +52,52 @@ export default class Visualizer extends React.Component {
   sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
+  quickSort = async (array = this.state.array.slice(), low = 0, high = array.length - 1) => {
+    if (low < high) {
+        const pi = await this.partition(array, low, high);
 
+        // Recursively sort elements before and after partition
+        await this.quickSort(array, low, pi - 1);
+        await this.quickSort(array, pi + 1, high);
+    }
+    this.setState({ array });
+}
+
+partition = async (array, low, high) => {
+    const pivot = array[high];
+    let i = low - 1;
+
+    for (let j = low; j < high; j++) {
+        if (array[j] < pivot) {
+            i++;
+            [array[i], array[j]] = [array[j], array[i]];
+            this.setState({ array });
+            await this.sleep(50);
+        }
+    }
+    [array[i + 1], array[high]] = [array[high], array[i + 1]];
+    this.setState({ array });
+    await this.sleep(50);
+    return i + 1;
+}
+
+selectionSort = async () => {
+  const array = this.state.array.slice();
+
+  for (let i = 0; i < array.length - 1; i++) {
+      let minIndex = i;
+      for (let j = i + 1; j < array.length; j++) {
+          if (array[j] < array[minIndex]) {
+              minIndex = j;
+          }
+      }
+      if (minIndex !== i) {
+          [array[i], array[minIndex]] = [array[minIndex], array[i]];
+          this.setState({ array });
+          await this.sleep(50);
+      }
+  }
+}
   getRandomInt(min, max) {
     min = Math.ceil(min);
     max = Math.floor(max);
@@ -71,6 +116,8 @@ export default class Visualizer extends React.Component {
         ))}
         <button onClick={this.bubbleSort}>Start Bubble Sort</button>
         <button onClick={this.insertionSort}>Start Insertion Sort</button>
+        <button onClick={() => this.quickSort()}>Start Quick Sort</button>
+        <button onClick={this.selectionSort}>Start Selection Sort</button>
       </div>
     );
   }
