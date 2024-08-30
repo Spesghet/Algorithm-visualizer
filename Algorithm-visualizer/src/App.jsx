@@ -1,10 +1,7 @@
 import React from "react";
 import "./App.css";
 class Visualizer extends React.Component {
-  state = { 
-    array: [], 
-    stopSorting:false
-  };
+  state = { array: [] };
 
   componentDidMount() {
     this.resetArray();
@@ -12,11 +9,9 @@ class Visualizer extends React.Component {
 
   resetArray = () => {
     const array = Array.from({ length: 100 }, () => this.getRandomInt(5, 1000));
-    this.setState({ array, stopSorting:false});
+    this.setState({ array });
   };
-  stopSorting = () => {
-    this.setState({ stopSorting: true }); 
-  };
+
   bubbleSort = async () => {
     const array = this.state.array.slice();
 
@@ -63,8 +58,8 @@ class Visualizer extends React.Component {
     high = array.length - 1
   ) => {
     if (low < high) {
-      if (this.state.stopSorting) return;
       const pi = await this.partition(array, low, high);
+
       await this.quickSort(array, low, pi - 1);
       await this.quickSort(array, pi + 1, high);
 
@@ -77,7 +72,6 @@ class Visualizer extends React.Component {
     let i = low - 1;
 
     for (let j = low; j < high; j++) {
-      if (this.state.stopSorting) return;
       if (array[j] < pivot) {
         i++;
         [array[i], array[j]] = [array[j], array[i]];
@@ -94,10 +88,8 @@ class Visualizer extends React.Component {
     const array = this.state.array.slice();
 
     for (let i = 0; i < array.length - 1; i++) {
-      if (this.state.stopSorting) return;
       let minIndex = i;
       for (let j = i + 1; j < array.length; j++) {
-        if (this.state.stopSorting) return;
         if (array[j] < array[minIndex]) {
           minIndex = j;
         }
@@ -131,7 +123,8 @@ class Visualizer extends React.Component {
         <button onClick={() => this.quickSort()}>Start Quick Sort</button>
         <button onClick={this.selectionSort}>Start Selection Sort</button>
         <button onClick={this.resetArray}>Reset Array</button>
-        <button onClick={() => this.stopSorting()}>Stop Sorting</button>
+        <button onClick={this.resetArray}>pause</button>
+
       </div>
     );
   }
