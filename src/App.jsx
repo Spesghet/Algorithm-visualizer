@@ -1,32 +1,63 @@
 import React from "react";
-import "./App.css";
+import "./App.css"; 
 class Visualizer extends React.Component {
   state = { array: [] };
+  isrunning = true 
 
   componentDidMount() {
     this.resetArray();
   }
-  
+
+ 
+
   resetArray = () => {
-    const array = Array.from({ length: 100 }, () => this.getRandomInt(5, 1000));
+    const array = Array.from({ length: 60 }, () => this.getRandomInt(1, 500));
     this.setState({ array });
   };
 
+  
+
+  getRandomInt(min, max) {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  };
+
+  render() {
+    const { array } = this.state;
+
+    return (
+      <div>
+        {array.map((value, idx) => (
+          <div className="array-bar" key={idx} style={{ height: `${value}px` }}>
+          </div>
+        ))}
+      <div>
+        <button onClick={this.bubbleSort}>Start Bubble Sort</button>
+        <button onClick={this.insertionSort}>Start Insertion Sort</button>
+        <button onClick={() => this.quickSort()}>Start Quick Sort</button>
+        <button onClick={this.selectionSort}>Start Selection Sort</button>
+        <button onClick={this.resetArray}>Reset Array</button>
+        <button onClick={this}>pause</button>
+      </div>
+      </div>
+    );
+  }
   bubbleSort = async () => {
     const array = this.state.array.slice();
 
     for (let i = 0; i < array.length - 1; i++) {
       for (let j = 0; j < array.length - i - 1; j++) {
-        if (array[j] > array[j + 1]) {
-          [array[j], array[j + 1]] = [array[j + 1], array[j]];
-
-          this.setState({ array });
-          await this.sleep(50);
-        }
+        if (ispaused == False){
+          if (array[j] > array[j + 1]) {
+            [array[j], array[j + 1]] = [array[j + 1], array[j]];
+            this.setState({ array });
+            await this.sleep(50);
+          }
+          }
       }
     }
   };
-
   insertionSort = async () => {
     const array = this.state.array.slice();
 
@@ -101,33 +132,6 @@ class Visualizer extends React.Component {
       }
     }
   };
-
-  getRandomInt(min, max) {
-    min = Math.ceil(min);
-    max = Math.floor(max);
-    return Math.floor(Math.random() * (max - min + 1)) + min;
-  };
-
-  render() {
-    const { array } = this.state;
-
-    return (
-      <div>
-        {array.map((value, idx) => (
-          <div className="array-bar" key={idx} style={{ height: `${value}px` }}>
-            {value}
-          </div>
-        ))}
-        <button onClick={this.bubbleSort}>Start Bubble Sort</button>
-        <button onClick={this.insertionSort}>Start Insertion Sort</button>
-        <button onClick={() => this.quickSort()}>Start Quick Sort</button>
-        <button onClick={this.selectionSort}>Start Selection Sort</button>
-        <button onClick={this.resetArray}>Reset Array</button>
-        <button onClick={this.resetArray}>pause</button>
-
-      </div>
-    );
-  }
 }
 
 export default Visualizer;
