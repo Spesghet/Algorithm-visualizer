@@ -6,7 +6,7 @@ class Visualizer extends React.Component {
   componentDidMount() {
     this.resetArray();
   }
-
+  
   resetArray = () => {
     const array = Array.from({ length: 100 }, () => this.getRandomInt(5, 1000));
     this.setState({ array });
