@@ -4,6 +4,7 @@ class Visualizer extends React.Component {
   state = { array: [] };
   isrunning = true 
 
+  speed = 
   componentDidMount() {
     this.resetArray();
   }
