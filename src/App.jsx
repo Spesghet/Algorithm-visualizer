@@ -4,11 +4,21 @@ import "./App.css";
 class Visualizer extends React.Component {
   state = {
     array: [],
-    isstopped: false, 
+    isstopped: false,
+    sortingType: null, 
+    i: 0, 
+    j: 0, 
   };
 
   pausebutton = () => {
-    this.setState((prevState) => ({ isstopped: !prevState.isstopped }));
+    this.setState((prevState) => ({ isstopped: !prevState.isstopped }), () => {
+      if (!this.state.isstopped) {
+
+        if (this.state.sortingType) {
+          this[this.state.sortingType]();
+        }
+      }
+    });
   };
 
   componentDidMount() {
@@ -17,7 +27,7 @@ class Visualizer extends React.Component {
 
   resetArray = () => {
     const array = Array.from({ length: 60 }, () => this.getRandomInt(1, 500));
-    this.setState({ array, isstopped: false }); 
+    this.setState({ array, isstopped: false, sortingType: null, i: 0, j: 0 });
   };
 
   getRandomInt(min, max) {
@@ -57,39 +67,45 @@ class Visualizer extends React.Component {
   }
 
   bubbleSort = async () => {
-    const array = this.state.array.slice();
-    for (let i = 0; i < array.length - 1; i++) {
-      for (let j = 0; j < array.length - i - 1; j++) {
-        if (this.state.isstopped) return; 
+    const { array } = this.state;
+    let { i, j } = this.state; 
+
+    for (; i < array.length - 1; i++) {
+      for (; j < array.length - i - 1; j++) {
+        if (this.state.isstopped) {
+          this.setState({ i, j, sortingType: 'bubbleSort' }); 
+          return;
+        }
         if (array[j] > array[j + 1]) {
           [array[j], array[j + 1]] = [array[j + 1], array[j]];
           this.setState({ array });
           await this.sleep(50);
         }
       }
+      j = 0; 
     }
+    this.setState({ sortingType: null });
   };
 
   insertionSort = async () => {
-    const array = this.state.array.slice();
+    const { array } = this.state;
+    let { i, j } = this.state;
 
-    for (let i = 1; i < array.length; i++) {
-      let j = i - 1;
+    for (; i < array.length; i++) {
       let value = array[i];
-
-      while (j >= 0 && array[j] > value) {
-        if (this.state.isstopped) return; 
+      for (j = i - 1; j >= 0 && array[j] > value; j--) {
+        if (this.state.isstopped) {
+          this.setState({ i, j, sortingType: 'insertionSort' });
+          return;
+        }
         array[j + 1] = array[j];
-        j--;
-
         this.setState({ array });
         await this.sleep(50);
       }
-
       array[j + 1] = value;
       this.setState({ array });
-      await this.sleep(50);
     }
+    this.setState({ sortingType: null }); 
   };
 
   sleep(ms) {
@@ -101,13 +117,14 @@ class Visualizer extends React.Component {
     low = 0,
     high = array.length - 1
   ) => {
-    if (this.state.isstopped) return; 
+    if (this.state.isstopped) {
+      this.setState({ sortingType: 'quickSort' });
+      return;
+    }
     if (low < high) {
       const pi = await this.partition(array, low, high);
-
       await this.quickSort(array, low, pi - 1);
       await this.quickSort(array, pi + 1, high);
-
       this.setState({ array });
     }
   };
@@ -117,7 +134,7 @@ class Visualizer extends React.Component {
     let i = low - 1;
 
     for (let j = low; j < high; j++) {
-      if (this.state.isstopped) return; 
+      if (this.state.isstopped) return;
       if (array[j] < pivot) {
         i++;
         [array[i], array[j]] = [array[j], array[i]];
@@ -131,12 +148,15 @@ class Visualizer extends React.Component {
   };
 
   selectionSort = async () => {
-    const array = this.state.array.slice();
-
-    for (let i = 0; i < array.length - 1; i++) {
-      if (this.state.isstopped) return; 
+    const { array } = this.state;
+    let { i, j } = this.state;
+    for (; i < array.length - 1; i++) {
       let minIndex = i;
-      for (let j = i + 1; j < array.length; j++) {
+      for (j = i + 1; j < array.length; j++) {
+        if (this.state.isstopped) {
+          this.setState({ i, j, sortingType: 'selectionSort' });
+          return;
+        }
         if (array[j] < array[minIndex]) {
           minIndex = j;
         }
@@ -146,7 +166,9 @@ class Visualizer extends React.Component {
         this.setState({ array });
         await this.sleep(50);
       }
+      j = 0; 
     }
+    this.setState({ sortingType: null }); 
   };
 }
 
