@@ -38,13 +38,11 @@ class Visualizer extends React.Component {
     return (
       <div className="visualizer">
         <div className="array-container">
-          {/* Display the array bars */}
           {array.map((value, idx) => (
             <div className="array-bar" key={idx} style={{ height: `${value}px` }}></div>
           ))}
         </div>
 
-        {/* Sorting Control Buttons */}
         <div>
           <button onClick={this.bubbleSort}>Start Bubble Sort</button>
           <button onClick={this.insertionSort}>Start Insertion Sort</button>
@@ -53,7 +51,6 @@ class Visualizer extends React.Component {
           <button onClick={this.resetArray}>Reset Array</button>
         </div>
 
-        {/* Slider to Adjust Sorting Speed */}
         <div className="slider-container">
           <Typography variant="h6" gutterBottom>
             Adjust Sorting Speed:
