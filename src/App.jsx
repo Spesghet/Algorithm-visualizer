@@ -6,7 +6,8 @@ import "./App.css";
 class Visualizer extends React.Component {
   state = { 
     array: [], 
-    speed: 50 
+    speed: 50,
+    isstopped:false
   };
   
   componentDidMount() {
