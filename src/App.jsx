@@ -7,16 +7,29 @@ class Visualizer extends React.Component {
   state = { 
     array: [], 
     speed: 50, 
-    isstopped: false
+    isstopped: false,
+    i: 0, 
+    j: 0, 
   };
-  
+
+  pausebutton = () => {
+    this.setState((prevState) => ({ isstopped: !prevState.isstopped }), () => {
+      if (!this.state.isstopped) {
+
+        if (this.state.sortingType) {
+          this[this.state.sortingType]();
+        }
+      }
+    });
+  };
+
   componentDidMount() {
-    this.resetArray();  
+    this.resetArray();
   }
 
   resetArray = () => {
     const array = Array.from({ length: 60 }, () => this.getRandomInt(1, 500));
-    this.setState({ array });
+    this.setState({ array, isstopped: false, sortingType: null, i: 0, j: 0 });
   };
 
   getRandomInt(min, max) {
