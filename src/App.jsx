@@ -6,7 +6,8 @@ import "./App.css";
 class Visualizer extends React.Component {
   state = { 
     array: [], 
-    speed: 50 
+    speed: 50, 
+    isstopped: false
   };
   
   componentDidMount() {
@@ -49,6 +50,7 @@ class Visualizer extends React.Component {
           <button onClick={() => this.quickSort()}>Start Quick Sort</button>
           <button onClick={this.selectionSort}>Start Selection Sort</button>
           <button onClick={this.resetArray}>Reset Array</button>
+          <button onClick={this.pausebutton}>{isstopped? "Resume":"Pause"}</button>
         </div>
 
         <div className="slider-container">
