@@ -11,7 +11,7 @@ class Visualizer extends React.Component {
     isPaused: false,
     currentBar: null,
     replacingBar: null,
-    currentSort: null
+    currentSort: null,
   };
   
   componentDidMount() {
@@ -68,57 +68,6 @@ class Visualizer extends React.Component {
     this.setState({ isStopped: false, isPaused: false, currentSort: sortMethod }, sortMethod);
   };
 
-  render() {
-    const { array, speed, isPaused, currentBar, replacingBar, currentSort } = this.state;
-
-    return (
-      <div className="visualizer">
-        <div className="array-container">
-          {array.map((value, idx) => (
-            <div 
-              className={`array-bar ${idx === currentBar ? 'current-bar' : ''} ${idx === replacingBar ? 'replacing-bar' : ''}`} 
-              key={idx} 
-              style={{ height: `${value}px` }}>
-            </div>
-          ))}
-        </div>
-
-        <div>
-          <button onClick={() => this.startSort(this.bubbleSort)} disabled={currentSort && currentSort !== this.bubbleSort}>
-            Start Bubble Sort
-          </button>
-          <button onClick={() => this.startSort(this.insertionSort)} disabled={currentSort && currentSort !== this.insertionSort}>
-            Start Insertion Sort
-          </button>
-          <button onClick={() => this.startSort(this.quickSort)} disabled={currentSort && currentSort !== this.quickSort}>
-            Start Quick Sort
-          </button>
-          <button onClick={() => this.startSort(this.selectionSort)} disabled={currentSort && currentSort !== this.selectionSort}>
-            Start Selection Sort
-          </button>
-          <button onClick={this.resetArray}>Reset Array</button>
-          <button onClick={this.togglePause}>{isPaused ? "Resume Sorting" : "Pause Sorting"}</button>
-        </div>
-
-        <div className="slider-container">
-          <Typography variant="h6" gutterBottom>
-            Adjust Sorting Speed:
-          </Typography>
-          <Slider
-            value={speed}
-            onChange={this.handleSliderChange}
-            min={1} 
-            max={500} 
-            step={5} 
-            aria-labelledby="speed-slider"
-          />
-          <Typography variant="body1" gutterBottom>
-          </Typography>
-        </div>
-      </div>
-    );
-  }
-
   bubbleSort = async () => {
     const array = this.state.array.slice();
     for (let i = 0; i < array.length - 1; i++) {
@@ -131,6 +80,7 @@ class Visualizer extends React.Component {
           await this.sleep(800 - this.state.speed); 
         }
       }
+      this.setState({ replacingBar: array.length - 1 - i }); 
     }
     this.setState({ currentBar: null, replacingBar: null, currentSort: null });
   };
@@ -204,6 +154,55 @@ class Visualizer extends React.Component {
     }
     this.setState({ currentBar: null, replacingBar: null, currentSort: null });
   };
+
+  render() {
+    const { array, speed, isPaused, currentBar, replacingBar, currentSort } = this.state;
+
+    return (
+      <div className="visualizer">
+        <div className="array-container">
+          {array.map((value, idx) => (
+            <div 
+              className={`array-bar ${idx === currentBar ? 'current-bar' : ''} ${idx === replacingBar ? 'replacing-bar' : ''}`} 
+              key={idx} 
+              style={{ height: `${value}px` }}>
+            </div>
+          ))}
+        </div>
+
+        <div>
+          <button onClick={() => this.startSort(this.bubbleSort)} disabled={currentSort && currentSort !== this.bubbleSort}>
+            Start Bubble Sort
+          </button>
+          <button onClick={() => this.startSort(this.insertionSort)} disabled={currentSort && currentSort !== this.insertionSort}>
+            Start Insertion Sort
+          </button>
+          <button onClick={() => this.startSort(this.quickSort)} disabled={currentSort && currentSort !== this.quickSort}>
+            Start Quick Sort
+          </button>
+          <button onClick={() => this.startSort(this.selectionSort)} disabled={currentSort && currentSort !== this.selectionSort}>
+            Start Selection Sort
+          </button>
+          <button onClick={this.resetArray}>Reset Array</button>
+          <button onClick={this.togglePause}>{isPaused ? "Resume Sorting" : "Pause Sorting"}</button>
+        </div>
+
+        <div className="slider-container">
+          <Typography variant="h6" gutterBottom>
+            Adjust Sorting Speed:
+          </Typography>
+          <Slider
+            value={speed}
+            onChange={this.handleSliderChange}
+            min={1} 
+            max={500} 
+            step={5} 
+            aria-labelledby="speed-slider"
+          />
+        </div>
+      </div>
+    );
+  }
 }
 
 export default Visualizer;
