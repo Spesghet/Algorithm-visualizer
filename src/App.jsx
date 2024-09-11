@@ -195,7 +195,7 @@ class Visualizer extends React.Component {
             value={speed}
             onChange={this.handleSliderChange}
             min={1} 
-            max={500} 
+            max={1000} 
             step={5} 
             aria-labelledby="speed-slider"
           />
