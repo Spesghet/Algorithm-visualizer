@@ -19,7 +19,7 @@ class Visualizer extends React.Component {
   }
 
   resetArray = () => {
-    const array = Array.from({ length: 60 }, () => this.getRandomInt(50, 500));
+    const array = Array.from({ length: 60 }, () => this.getRandomInt(100, 500));
     this.setState({ 
       array, 
       isStopped: true, 
@@ -108,12 +108,11 @@ class Visualizer extends React.Component {
             value={speed}
             onChange={this.handleSliderChange}
             min={1} 
-            max={1000} 
-            step={0.1} 
+            max={500} 
+            step={5} 
             aria-labelledby="speed-slider"
           />
           <Typography variant="body1" gutterBottom>
-            Current Speed: {speed} ms delay
           </Typography>
         </div>
       </div>
@@ -129,7 +128,7 @@ class Visualizer extends React.Component {
         if (array[j] > array[j + 1]) {
           [array[j], array[j + 1]] = [array[j + 1], array[j]];
           this.setState({ array });
-          await this.sleep(100 - this.state.speed); 
+          await this.sleep(800 - this.state.speed); 
         }
       }
     }
@@ -148,11 +147,11 @@ class Visualizer extends React.Component {
         array[j + 1] = array[j];
         j = j - 1;
         this.setState({ array, replacingBar: j + 1 });
-        await this.sleep(100 - this.state.speed); 
+        await this.sleep(800 - this.state.speed); 
       }
       array[j + 1] = value;
       this.setState({ array });
-      await this.sleep(100 - this.state.speed);
+      await this.sleep(800 - this.state.speed);
     }
     this.setState({ currentBar: null, replacingBar: null, currentSort: null });
   };
@@ -177,11 +176,11 @@ class Visualizer extends React.Component {
         i++;
         [array[i], array[j]] = [array[j], array[i]];
         this.setState({ array });
-        await this.sleep(100 - this.state.speed); 
+        await this.sleep(800 - this.state.speed); 
       }
     }
     [array[i + 1], array[high]] = [array[high], array[i + 1]];
-    await this.sleep(100 - this.state.speed); 
+    await this.sleep(800 - this.state.speed); 
     return i + 1;
   };
 
@@ -200,7 +199,7 @@ class Visualizer extends React.Component {
       if (minIndex !== i) {
         [array[i], array[minIndex]] = [array[minIndex], array[i]];
         this.setState({ array });
-        await this.sleep(100 - this.state.speed); 
+        await this.sleep(800 - this.state.speed); 
       }
     }
     this.setState({ currentBar: null, replacingBar: null, currentSort: null });
