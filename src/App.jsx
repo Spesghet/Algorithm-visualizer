@@ -6,30 +6,28 @@ import "./App.css";
 class Visualizer extends React.Component {
   state = { 
     array: [], 
-    speed: 50, 
-    isstopped: false,
-    i: 0, 
-    j: 0, 
+    speed: 10,
+    isStopped: false,
+    isPaused: false,
+    currentBar: null,
+    replacingBar: null,
+    currentSort: null
   };
-
-  pausebutton = () => {
-    this.setState((prevState) => ({ isstopped: !prevState.isstopped }), () => {
-      if (!this.state.isstopped) {
-
-        if (this.state.sortingType) {
-          this[this.state.sortingType]();
-        }
-      }
-    });
-  };
-
+  
   componentDidMount() {
-    this.resetArray();
+    this.resetArray();  
   }
 
   resetArray = () => {
-    const array = Array.from({ length: 60 }, () => this.getRandomInt(1, 500));
-    this.setState({ array, isstopped: false, sortingType: null, i: 0, j: 0 });
+    const array = Array.from({ length: 60 }, () => this.getRandomInt(50, 500));
+    this.setState({ 
+      array, 
+      isStopped: true, 
+      isPaused: true, 
+      currentBar: null, 
+      replacingBar: null,
+      currentSort: null
+    });
   };
 
   getRandomInt(min, max) {
@@ -43,27 +41,63 @@ class Visualizer extends React.Component {
   };
 
   sleep(ms) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
+    return new Promise((resolve) => {
+      const checkPause = () => {
+        if (this.state.isPaused) {
+          setTimeout(checkPause, 50);
+        } else {
+          resolve();
+        }
+      };
+      setTimeout(checkPause, ms);
+    });
   }
 
+  stopSorting = () => {
+    this.setState({ isStopped: true, isPaused: false, currentSort: null });
+  };
+
+  togglePause = () => {
+    this.setState((prevState) => ({ isPaused: !prevState.isPaused }));
+  };
+
+  startSort = (sortMethod) => {
+    if (this.state.currentSort) {
+      this.stopSorting();
+    }
+    this.setState({ isStopped: false, isPaused: false, currentSort: sortMethod }, sortMethod);
+  };
+
   render() {
-    const { array, speed } = this.state;
+    const { array, speed, isPaused, currentBar, replacingBar, currentSort } = this.state;
 
     return (
       <div className="visualizer">
         <div className="array-container">
           {array.map((value, idx) => (
-            <div className="array-bar" key={idx} style={{ height: `${value}px` }}></div>
+            <div 
+              className={`array-bar ${idx === currentBar ? 'current-bar' : ''} ${idx === replacingBar ? 'replacing-bar' : ''}`} 
+              key={idx} 
+              style={{ height: `${value}px` }}>
+            </div>
           ))}
         </div>
 
         <div>
-          <button onClick={this.bubbleSort}>Start Bubble Sort</button>
-          <button onClick={this.insertionSort}>Start Insertion Sort</button>
-          <button onClick={() => this.quickSort()}>Start Quick Sort</button>
-          <button onClick={this.selectionSort}>Start Selection Sort</button>
+          <button onClick={() => this.startSort(this.bubbleSort)} disabled={currentSort && currentSort !== this.bubbleSort}>
+            Start Bubble Sort
+          </button>
+          <button onClick={() => this.startSort(this.insertionSort)} disabled={currentSort && currentSort !== this.insertionSort}>
+            Start Insertion Sort
+          </button>
+          <button onClick={() => this.startSort(this.quickSort)} disabled={currentSort && currentSort !== this.quickSort}>
+            Start Quick Sort
+          </button>
+          <button onClick={() => this.startSort(this.selectionSort)} disabled={currentSort && currentSort !== this.selectionSort}>
+            Start Selection Sort
+          </button>
           <button onClick={this.resetArray}>Reset Array</button>
-          <button onClick={this.pausebutton}>{isstopped? "Resume":"Pause"}</button>
+          <button onClick={this.togglePause}>{isPaused ? "Resume Sorting" : "Pause Sorting"}</button>
         </div>
 
         <div className="slider-container">
@@ -74,8 +108,8 @@ class Visualizer extends React.Component {
             value={speed}
             onChange={this.handleSliderChange}
             min={1} 
-            max={100} 
-            step={1} 
+            max={1000} 
+            step={0.1} 
             aria-labelledby="speed-slider"
           />
           <Typography variant="body1" gutterBottom>
@@ -88,9 +122,10 @@ class Visualizer extends React.Component {
 
   bubbleSort = async () => {
     const array = this.state.array.slice();
-
     for (let i = 0; i < array.length - 1; i++) {
       for (let j = 0; j < array.length - i - 1; j++) {
+        if (this.state.isStopped) return;
+        this.setState({ currentBar: j, replacingBar: j + 1 });
         if (array[j] > array[j + 1]) {
           [array[j], array[j + 1]] = [array[j + 1], array[j]];
           this.setState({ array });
@@ -98,40 +133,36 @@ class Visualizer extends React.Component {
         }
       }
     }
+    this.setState({ currentBar: null, replacingBar: null, currentSort: null });
   };
 
   insertionSort = async () => {
     const array = this.state.array.slice();
-
     for (let i = 1; i < array.length; i++) {
+      if (this.state.isStopped) return;
       let j = i - 1;
       let value = array[i];
-
+      this.setState({ currentBar: i });
       while (j >= 0 && array[j] > value) {
+        if (this.state.isStopped) return;
         array[j + 1] = array[j];
         j = j - 1;
-
-        this.setState({ array });
+        this.setState({ array, replacingBar: j + 1 });
         await this.sleep(100 - this.state.speed); 
       }
-
       array[j + 1] = value;
       this.setState({ array });
       await this.sleep(100 - this.state.speed);
     }
+    this.setState({ currentBar: null, replacingBar: null, currentSort: null });
   };
 
-  quickSort = async (
-    array = this.state.array.slice(),
-    low = 0,
-    high = array.length - 1
-  ) => {
+  quickSort = async (array = this.state.array.slice(), low = 0, high = array.length - 1) => {
+    if (this.state.isStopped) return;
     if (low < high) {
       const pi = await this.partition(array, low, high);
-
       await this.quickSort(array, low, pi - 1);
       await this.quickSort(array, pi + 1, high);
-
       this.setState({ array });
     }
   };
@@ -139,8 +170,9 @@ class Visualizer extends React.Component {
   partition = async (array, low, high) => {
     const pivot = array[high];
     let i = low - 1;
-
     for (let j = low; j < high; j++) {
+      if (this.state.isStopped) return i + 1;
+      this.setState({ currentBar: j, replacingBar: i });
       if (array[j] < pivot) {
         i++;
         [array[i], array[j]] = [array[j], array[i]];
@@ -155,10 +187,12 @@ class Visualizer extends React.Component {
 
   selectionSort = async () => {
     const array = this.state.array.slice();
-
     for (let i = 0; i < array.length - 1; i++) {
+      if (this.state.isStopped) return;
       let minIndex = i;
       for (let j = i + 1; j < array.length; j++) {
+        if (this.state.isStopped) return;
+        this.setState({ currentBar: j, replacingBar: minIndex });
         if (array[j] < array[minIndex]) {
           minIndex = j;
         }
@@ -169,6 +203,7 @@ class Visualizer extends React.Component {
         await this.sleep(100 - this.state.speed); 
       }
     }
+    this.setState({ currentBar: null, replacingBar: null, currentSort: null });
   };
 }
 
