@@ -13,7 +13,7 @@ class Visualizer extends React.Component {
       isStopped: false,
       isPaused: false,
       currentBar: null,
-      replacingBar: null,
+      comparingBar: null,
       currentSort: null,
       sortDescription: '',
     };
@@ -40,7 +40,7 @@ class Visualizer extends React.Component {
       isStopped: true, 
       isPaused: true, 
       currentBar: null, 
-      replacingBar: null,
+      comparingBar: null,
       currentSort: null,
       sortDescription: '',
     });
@@ -106,20 +106,22 @@ class Visualizer extends React.Component {
 
   bubbleSort = async (sortingProcessId) => {
     const array = this.state.array.slice();
-    for (let i = 0; i < array.length - 1; i++) {
-      for (let j = 0; j < array.length - i - 1; j++) {
+    const n = array.length;
+    for (let i = 0; i < n - 1; i++) {
+      for (let j = 0; j < n - i - 1; j++) {
         if (this.state.isStopped || sortingProcessId !== this.currentSortingProcessId) return;
-        this.setState({ currentBar: j, replacingBar: j + 1 });
+        this.setState({ currentBar: j, comparingBar: j + 1 });
+        await this.sleep(800 - this.state.speed, sortingProcessId);
         if (array[j] > array[j + 1]) {
           [array[j], array[j + 1]] = [array[j + 1], array[j]];
           this.setState({ array });
-          await this.sleep(800 - this.state.speed, sortingProcessId); 
+          await this.sleep(800 - this.state.speed, sortingProcessId);
         }
+        this.setState({ currentBar: null, comparingBar: null });
       }
-      this.setState({ replacingBar: array.length - 1 - i }); 
     }
     if (sortingProcessId === this.currentSortingProcessId) {
-      this.setState({ currentBar: null, replacingBar: null, currentSort: null });
+      this.setState({ currentBar: null, comparingBar: null, currentSort: null });
     }
   };
 
@@ -127,22 +129,53 @@ class Visualizer extends React.Component {
     const array = this.state.array.slice();
     for (let i = 1; i < array.length; i++) {
       if (this.state.isStopped || sortingProcessId !== this.currentSortingProcessId) return;
+      let key = array[i];
       let j = i - 1;
-      let value = array[i];
       this.setState({ currentBar: i });
-      while (j >= 0 && array[j] > value) {
+      await this.sleep(800 - this.state.speed, sortingProcessId);
+      while (j >= 0 && array[j] > key) {
         if (this.state.isStopped || sortingProcessId !== this.currentSortingProcessId) return;
+        this.setState({ comparingBar: j });
+        await this.sleep(800 - this.state.speed, sortingProcessId);
         array[j + 1] = array[j];
+        this.setState({ array });
         j = j - 1;
-        this.setState({ array, replacingBar: j + 1 });
-        await this.sleep(800 - this.state.speed, sortingProcessId); 
       }
-      array[j + 1] = value;
+      array[j + 1] = key;
       this.setState({ array });
+      this.setState({ currentBar: null, comparingBar: null });
       await this.sleep(800 - this.state.speed, sortingProcessId);
     }
     if (sortingProcessId === this.currentSortingProcessId) {
-      this.setState({ currentBar: null, replacingBar: null, currentSort: null });
+      this.setState({ currentBar: null, comparingBar: null, currentSort: null });
+    }
+  };
+
+  selectionSort = async (sortingProcessId) => {
+    const array = this.state.array.slice();
+    const n = array.length;
+    for (let i = 0; i < n - 1; i++) {
+      if (this.state.isStopped || sortingProcessId !== this.currentSortingProcessId) return;
+      let minIndex = i;
+      this.setState({ currentBar: i });
+      for (let j = i + 1; j < n; j++) {
+        if (this.state.isStopped || sortingProcessId !== this.currentSortingProcessId) return;
+        this.setState({ comparingBar: j });
+        await this.sleep(800 - this.state.speed, sortingProcessId);
+        if (array[j] < array[minIndex]) {
+          minIndex = j;
+        }
+        this.setState({ comparingBar: null });
+      }
+      if (minIndex !== i) {
+        [array[i], array[minIndex]] = [array[minIndex], array[i]];
+        this.setState({ array });
+        await this.sleep(800 - this.state.speed, sortingProcessId);
+      }
+      this.setState({ currentBar: null });
+    }
+    if (sortingProcessId === this.currentSortingProcessId) {
+      this.setState({ currentBar: null, comparingBar: null, currentSort: null });
     }
   };
 
@@ -156,7 +189,7 @@ class Visualizer extends React.Component {
       this.setState({ array });
     } else {
       if (sortingProcessId === this.currentSortingProcessId) {
-        this.setState({ currentBar: null, replacingBar: null, currentSort: null });
+        this.setState({ currentBar: null, comparingBar: null, currentSort: null });
       }
     }
   };
@@ -166,52 +199,33 @@ class Visualizer extends React.Component {
     let i = low - 1;
     for (let j = low; j < high; j++) {
       if (this.state.isStopped || sortingProcessId !== this.currentSortingProcessId) return i + 1;
-      this.setState({ currentBar: j, replacingBar: i });
+      this.setState({ currentBar: j, comparingBar: high });
+      await this.sleep(800 - this.state.speed, sortingProcessId);
       if (array[j] < pivot) {
         i++;
         [array[i], array[j]] = [array[j], array[i]];
         this.setState({ array });
-        await this.sleep(800 - this.state.speed, sortingProcessId); 
+        await this.sleep(800 - this.state.speed, sortingProcessId);
       }
+      this.setState({ currentBar: null, comparingBar: null });
     }
     [array[i + 1], array[high]] = [array[high], array[i + 1]];
     this.setState({ array });
-    await this.sleep(800 - this.state.speed, sortingProcessId); 
+    await this.sleep(800 - this.state.speed, sortingProcessId);
     return i + 1;
   };
 
-  selectionSort = async (sortingProcessId) => {
-    const array = this.state.array.slice();
-    for (let i = 0; i < array.length - 1; i++) {
-      if (this.state.isStopped || sortingProcessId !== this.currentSortingProcessId) return;
-      let minIndex = i;
-      for (let j = i + 1; j < array.length; j++) {
-        if (this.state.isStopped || sortingProcessId !== this.currentSortingProcessId) return;
-        this.setState({ currentBar: j, replacingBar: minIndex });
-        if (array[j] < array[minIndex]) {
-          minIndex = j;
-        }
-      }
-      if (minIndex !== i) {
-        [array[i], array[minIndex]] = [array[minIndex], array[i]];
-        this.setState({ array });
-        await this.sleep(800 - this.state.speed, sortingProcessId); 
-      }
-    }
-    if (sortingProcessId === this.currentSortingProcessId) {
-      this.setState({ currentBar: null, replacingBar: null, currentSort: null });
-    }
-  };
-
   render() {
-    const { array, speed, isPaused, currentBar, replacingBar, currentSort, sortDescription, arraySize } = this.state;
+    const { array, speed, isPaused, currentBar, comparingBar, currentSort, sortDescription, arraySize } = this.state;
 
     return (
       <div className="visualizer" style={{ '--array-size': arraySize }}>
         <div className="array-container">
           {array.map((value, idx) => (
             <div 
-              className={`array-bar ${idx === currentBar ? 'current-bar' : ''} ${idx === replacingBar ? 'replacing-bar' : ''}`} 
+              className={`array-bar 
+                ${idx === currentBar ? 'current-bar' : ''} 
+                ${idx === comparingBar ? 'comparing-bar' : ''}`} 
               key={idx} 
               style={{ height: `${value}px` }}>
             </div>
