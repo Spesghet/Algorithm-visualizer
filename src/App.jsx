@@ -7,26 +7,37 @@ class Visualizer extends React.Component {
   state = { 
     array: [], 
     speed: 10,
+    arraySize: 50,
     isStopped: false,
     isPaused: false,
     currentBar: null,
     replacingBar: null,
     currentSort: null,
+    sortDescription: '',
   };
   
+  sortDescriptions = {
+    bubbleSort: 'Bubble Sort is a simple sorting algorithm that repeatedly steps through the list, compares adjacent elements, and swaps them if they are in the wrong order. \n\nTime Complexity: O(n²) \nSpace Complexity: O(1)',
+    insertionSort: 'Insertion Sort builds the final sorted array one item at a time. It is much less efficient on large lists than more advanced algorithms. \n\nTime Complexity: O(n²) \nSpace Complexity: O(1)',
+    quickSort: 'Quick Sort is an efficient sorting algorithm using a divide-and-conquer approach to partition the array. \n\nAverage Time Complexity: O(n log n) \nWorst-case Time Complexity: O(n²) \nSpace Complexity: O(log n)',
+    selectionSort: 'Selection Sort divides the input list into two parts: a sorted sublist and an unsorted sublist. It repeatedly selects the smallest (or largest) element from the unsorted sublist and moves it to the sorted sublist. \n\nTime Complexity: O(n²) \nSpace Complexity: O(1)',
+  };
+
   componentDidMount() {
     this.resetArray();  
   }
 
   resetArray = () => {
-    const array = Array.from({ length: 60 }, () => this.getRandomInt(100, 500));
+    const { arraySize } = this.state;
+    const array = Array.from({ length: arraySize }, () => this.getRandomInt(100, 500));
     this.setState({ 
       array, 
       isStopped: true, 
       isPaused: true, 
       currentBar: null, 
       replacingBar: null,
-      currentSort: null
+      currentSort: null,
+      sortDescription: '',
     });
   };
 
@@ -40,32 +51,48 @@ class Visualizer extends React.Component {
     this.setState({ speed: newValue });
   };
 
+  handleArraySizeChange = (event, newValue) => {
+    this.setState({ arraySize: newValue }, this.resetArray);
+  };
+
   sleep(ms) {
     return new Promise((resolve) => {
-      const checkPause = () => {
+      const startTime = Date.now();
+      const sleepCheck = () => {
         if (this.state.isPaused) {
-          setTimeout(checkPause, 50);
-        } else {
+          setTimeout(sleepCheck, 50);
+        } else if (Date.now() - startTime >= ms) {
           resolve();
+        } else {
+          setTimeout(sleepCheck, 10);
         }
       };
-      setTimeout(checkPause, ms);
+      sleepCheck();
     });
   }
 
   stopSorting = () => {
-    this.setState({ isStopped: true, isPaused: false, currentSort: null });
+    this.setState({ isStopped: true, isPaused: false, currentSort: null, sortDescription: '' });
   };
 
   togglePause = () => {
     this.setState((prevState) => ({ isPaused: !prevState.isPaused }));
   };
 
-  startSort = (sortMethod) => {
+  startSort = (sortMethodName) => {
     if (this.state.currentSort) {
       this.stopSorting();
     }
-    this.setState({ isStopped: false, isPaused: false, currentSort: sortMethod }, sortMethod);
+    const sortMethod = this[sortMethodName];
+    const description = this.sortDescriptions[sortMethodName];
+    this.setState({ 
+      isStopped: false, 
+      isPaused: false, 
+      currentSort: sortMethodName, 
+      sortDescription: description 
+    }, () => {
+      sortMethod();
+    });
   };
 
   bubbleSort = async () => {
@@ -113,6 +140,8 @@ class Visualizer extends React.Component {
       await this.quickSort(array, low, pi - 1);
       await this.quickSort(array, pi + 1, high);
       this.setState({ array });
+    } else {
+      this.setState({ currentBar: null, replacingBar: null, currentSort: null });
     }
   };
 
@@ -130,6 +159,7 @@ class Visualizer extends React.Component {
       }
     }
     [array[i + 1], array[high]] = [array[high], array[i + 1]];
+    this.setState({ array });
     await this.sleep(800 - this.state.speed); 
     return i + 1;
   };
@@ -156,10 +186,10 @@ class Visualizer extends React.Component {
   };
 
   render() {
-    const { array, speed, isPaused, currentBar, replacingBar, currentSort } = this.state;
+    const { array, speed, isPaused, currentBar, replacingBar, currentSort, sortDescription, arraySize } = this.state;
 
     return (
-      <div className="visualizer">
+      <div className="visualizer" style={{ '--array-size': arraySize }}>
         <div className="array-container">
           {array.map((value, idx) => (
             <div 
@@ -171,21 +201,27 @@ class Visualizer extends React.Component {
         </div>
 
         <div>
-          <button onClick={() => this.startSort(this.bubbleSort)} disabled={currentSort && currentSort !== this.bubbleSort}>
+          <button onClick={() => this.startSort('bubbleSort')} disabled={currentSort && currentSort !== 'bubbleSort'}>
             Start Bubble Sort
           </button>
-          <button onClick={() => this.startSort(this.insertionSort)} disabled={currentSort && currentSort !== this.insertionSort}>
+          <button onClick={() => this.startSort('insertionSort')} disabled={currentSort && currentSort !== 'insertionSort'}>
             Start Insertion Sort
           </button>
-          <button onClick={() => this.startSort(this.quickSort)} disabled={currentSort && currentSort !== this.quickSort}>
+          <button onClick={() => this.startSort('quickSort')} disabled={currentSort && currentSort !== 'quickSort'}>
             Start Quick Sort
           </button>
-          <button onClick={() => this.startSort(this.selectionSort)} disabled={currentSort && currentSort !== this.selectionSort}>
+          <button onClick={() => this.startSort('selectionSort')} disabled={currentSort && currentSort !== 'selectionSort'}>
             Start Selection Sort
           </button>
           <button onClick={this.resetArray}>Reset Array</button>
           <button onClick={this.togglePause}>{isPaused ? "Resume Sorting" : "Pause Sorting"}</button>
         </div>
+
+        {sortDescription && (
+          <div className="description">
+            <p>{sortDescription}</p>
+          </div>
+        )}
 
         <div className="slider-container">
           <Typography variant="h6" gutterBottom>
@@ -195,9 +231,23 @@ class Visualizer extends React.Component {
             value={speed}
             onChange={this.handleSliderChange}
             min={1} 
-            max={1000} 
+            max={750} 
             step={5} 
             aria-labelledby="speed-slider"
+          />
+        </div>
+
+        <div className="slider-container">
+          <Typography variant="h6" gutterBottom>
+            Adjust Array Size:
+          </Typography>
+          <Slider
+            value={arraySize}
+            onChange={this.handleArraySizeChange}
+            min={10} 
+            max={100} 
+            step={5} 
+            aria-labelledby="array-size-slider"
           />
         </div>
       </div>
