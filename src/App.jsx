@@ -4,23 +4,27 @@ import Typography from '@mui/material/Typography';
 import "./App.css";
 
 class Visualizer extends React.Component {
-  state = { 
-    array: [], 
-    speed: 10,
-    arraySize: 50,
-    isStopped: false,
-    isPaused: false,
-    currentBar: null,
-    replacingBar: null,
-    currentSort: null,
-    sortDescription: '',
-  };
+  constructor(props) {
+    super(props);
+    this.state = { 
+      array: [], 
+      speed: 10,
+      arraySize: 50,
+      isStopped: false,
+      isPaused: false,
+      currentBar: null,
+      replacingBar: null,
+      currentSort: null,
+      sortDescription: '',
+    };
+    this.currentSortingProcessId = 0; 
+  }
   
   sortDescriptions = {
-    bubbleSort: 'Bubble Sort is a simple sorting algorithm that repeatedly steps through the list, compares adjacent elements, and swaps them if they are in the wrong order. \n\nTime Complexity: O(n²) \nSpace Complexity: O(1)',
-    insertionSort: 'Insertion Sort builds the final sorted array one item at a time. It is much less efficient on large lists than more advanced algorithms. \n\nTime Complexity: O(n²) \nSpace Complexity: O(1)',
-    quickSort: 'Quick Sort is an efficient sorting algorithm using a divide-and-conquer approach to partition the array. \n\nAverage Time Complexity: O(n log n) \nWorst-case Time Complexity: O(n²) \nSpace Complexity: O(log n)',
-    selectionSort: 'Selection Sort divides the input list into two parts: a sorted sublist and an unsorted sublist. It repeatedly selects the smallest (or largest) element from the unsorted sublist and moves it to the sorted sublist. \n\nTime Complexity: O(n²) \nSpace Complexity: O(1)',
+    bubbleSort: 'Bubble Sort is a simple sorting algorithm that repeatedly steps through the list, compares adjacent elements, and swaps them if they are in the wrong order.\n\nTime Complexity: O(n²)\nSpace Complexity: O(1)',
+    insertionSort: 'Insertion Sort builds the final sorted array one item at a time. It is much less efficient on large lists than more advanced algorithms.\n\nTime Complexity: O(n²)\nSpace Complexity: O(1)',
+    quickSort: 'Quick Sort is an efficient sorting algorithm using a divide-and-conquer approach to partition the array.\n\nAverage Time Complexity: O(n log n)\nWorst-case Time Complexity: O(n²)\nSpace Complexity: O(log n)',
+    selectionSort: 'Selection Sort divides the input list into two parts: a sorted sublist and an unsorted sublist. It repeatedly selects the smallest (or largest) element from the unsorted sublist and moves it to the sorted sublist.\n\nTime Complexity: O(n²)\nSpace Complexity: O(1)',
   };
 
   componentDidMount() {
@@ -30,6 +34,7 @@ class Visualizer extends React.Component {
   resetArray = () => {
     const { arraySize } = this.state;
     const array = Array.from({ length: arraySize }, () => this.getRandomInt(100, 500));
+    this.currentSortingProcessId = 0; 
     this.setState({ 
       array, 
       isStopped: true, 
@@ -55,12 +60,14 @@ class Visualizer extends React.Component {
     this.setState({ arraySize: newValue }, this.resetArray);
   };
 
-  sleep(ms) {
+  sleep(ms, sortingProcessId) {
     return new Promise((resolve) => {
       const startTime = Date.now();
       const sleepCheck = () => {
         if (this.state.isPaused) {
           setTimeout(sleepCheck, 50);
+        } else if (this.state.isStopped || sortingProcessId !== this.currentSortingProcessId) {
+          resolve();
         } else if (Date.now() - startTime >= ms) {
           resolve();
         } else {
@@ -83,6 +90,8 @@ class Visualizer extends React.Component {
     if (this.state.currentSort) {
       this.stopSorting();
     }
+    this.currentSortingProcessId++; 
+    const sortingProcessId = this.currentSortingProcessId;
     const sortMethod = this[sortMethodName];
     const description = this.sortDescriptions[sortMethodName];
     this.setState({ 
@@ -91,86 +100,93 @@ class Visualizer extends React.Component {
       currentSort: sortMethodName, 
       sortDescription: description 
     }, () => {
-      sortMethod();
+      sortMethod(sortingProcessId);
     });
   };
 
-  bubbleSort = async () => {
+  bubbleSort = async (sortingProcessId) => {
     const array = this.state.array.slice();
     for (let i = 0; i < array.length - 1; i++) {
       for (let j = 0; j < array.length - i - 1; j++) {
-        if (this.state.isStopped) return;
+        if (this.state.isStopped || sortingProcessId !== this.currentSortingProcessId) return;
         this.setState({ currentBar: j, replacingBar: j + 1 });
         if (array[j] > array[j + 1]) {
           [array[j], array[j + 1]] = [array[j + 1], array[j]];
           this.setState({ array });
-          await this.sleep(800 - this.state.speed); 
+          await this.sleep(800 - this.state.speed, sortingProcessId); 
         }
       }
       this.setState({ replacingBar: array.length - 1 - i }); 
     }
-    this.setState({ currentBar: null, replacingBar: null, currentSort: null });
-  };
-
-  insertionSort = async () => {
-    const array = this.state.array.slice();
-    for (let i = 1; i < array.length; i++) {
-      if (this.state.isStopped) return;
-      let j = i - 1;
-      let value = array[i];
-      this.setState({ currentBar: i });
-      while (j >= 0 && array[j] > value) {
-        if (this.state.isStopped) return;
-        array[j + 1] = array[j];
-        j = j - 1;
-        this.setState({ array, replacingBar: j + 1 });
-        await this.sleep(800 - this.state.speed); 
-      }
-      array[j + 1] = value;
-      this.setState({ array });
-      await this.sleep(800 - this.state.speed);
-    }
-    this.setState({ currentBar: null, replacingBar: null, currentSort: null });
-  };
-
-  quickSort = async (array = this.state.array.slice(), low = 0, high = array.length - 1) => {
-    if (this.state.isStopped) return;
-    if (low < high) {
-      const pi = await this.partition(array, low, high);
-      await this.quickSort(array, low, pi - 1);
-      await this.quickSort(array, pi + 1, high);
-      this.setState({ array });
-    } else {
+    if (sortingProcessId === this.currentSortingProcessId) {
       this.setState({ currentBar: null, replacingBar: null, currentSort: null });
     }
   };
 
-  partition = async (array, low, high) => {
+  insertionSort = async (sortingProcessId) => {
+    const array = this.state.array.slice();
+    for (let i = 1; i < array.length; i++) {
+      if (this.state.isStopped || sortingProcessId !== this.currentSortingProcessId) return;
+      let j = i - 1;
+      let value = array[i];
+      this.setState({ currentBar: i });
+      while (j >= 0 && array[j] > value) {
+        if (this.state.isStopped || sortingProcessId !== this.currentSortingProcessId) return;
+        array[j + 1] = array[j];
+        j = j - 1;
+        this.setState({ array, replacingBar: j + 1 });
+        await this.sleep(800 - this.state.speed, sortingProcessId); 
+      }
+      array[j + 1] = value;
+      this.setState({ array });
+      await this.sleep(800 - this.state.speed, sortingProcessId);
+    }
+    if (sortingProcessId === this.currentSortingProcessId) {
+      this.setState({ currentBar: null, replacingBar: null, currentSort: null });
+    }
+  };
+
+  quickSort = async (sortingProcessId, array = this.state.array.slice(), low = 0, high = array.length - 1) => {
+    if (this.state.isStopped || sortingProcessId !== this.currentSortingProcessId) return;
+    if (low < high) {
+      const pi = await this.partition(array, low, high, sortingProcessId);
+      await this.quickSort(sortingProcessId, array, low, pi - 1);
+      await this.quickSort(sortingProcessId, array, pi + 1, high);
+      if (sortingProcessId !== this.currentSortingProcessId) return;
+      this.setState({ array });
+    } else {
+      if (sortingProcessId === this.currentSortingProcessId) {
+        this.setState({ currentBar: null, replacingBar: null, currentSort: null });
+      }
+    }
+  };
+
+  partition = async (array, low, high, sortingProcessId) => {
     const pivot = array[high];
     let i = low - 1;
     for (let j = low; j < high; j++) {
-      if (this.state.isStopped) return i + 1;
+      if (this.state.isStopped || sortingProcessId !== this.currentSortingProcessId) return i + 1;
       this.setState({ currentBar: j, replacingBar: i });
       if (array[j] < pivot) {
         i++;
         [array[i], array[j]] = [array[j], array[i]];
         this.setState({ array });
-        await this.sleep(800 - this.state.speed); 
+        await this.sleep(800 - this.state.speed, sortingProcessId); 
       }
     }
     [array[i + 1], array[high]] = [array[high], array[i + 1]];
     this.setState({ array });
-    await this.sleep(800 - this.state.speed); 
+    await this.sleep(800 - this.state.speed, sortingProcessId); 
     return i + 1;
   };
 
-  selectionSort = async () => {
+  selectionSort = async (sortingProcessId) => {
     const array = this.state.array.slice();
     for (let i = 0; i < array.length - 1; i++) {
-      if (this.state.isStopped) return;
+      if (this.state.isStopped || sortingProcessId !== this.currentSortingProcessId) return;
       let minIndex = i;
       for (let j = i + 1; j < array.length; j++) {
-        if (this.state.isStopped) return;
+        if (this.state.isStopped || sortingProcessId !== this.currentSortingProcessId) return;
         this.setState({ currentBar: j, replacingBar: minIndex });
         if (array[j] < array[minIndex]) {
           minIndex = j;
@@ -179,10 +195,12 @@ class Visualizer extends React.Component {
       if (minIndex !== i) {
         [array[i], array[minIndex]] = [array[minIndex], array[i]];
         this.setState({ array });
-        await this.sleep(800 - this.state.speed); 
+        await this.sleep(800 - this.state.speed, sortingProcessId); 
       }
     }
-    this.setState({ currentBar: null, replacingBar: null, currentSort: null });
+    if (sortingProcessId === this.currentSortingProcessId) {
+      this.setState({ currentBar: null, replacingBar: null, currentSort: null });
+    }
   };
 
   render() {
