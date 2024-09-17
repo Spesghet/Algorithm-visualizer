@@ -39,17 +39,17 @@ body {
 
 .array-bar {
   background-color: #4a90e2;
-  width: calc(100% / 60 - 2px);
+  width: calc(100% / var(--array-size) - 2px);
   margin: 0 1px;
   transition: height 0.3s ease, background-color 0.3s ease;
   border-radius: 4px;
 }
 
 .current-bar {
-  background-color: #f5a623;
+  background-color: #f5a623; 
 }
 
-.replacing-bar {
+.comparing-bar {
   background-color: #e94e77;
 }
 
