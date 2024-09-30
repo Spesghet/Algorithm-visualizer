@@ -2,7 +2,6 @@ import React from 'react';
 import Slider from '@mui/material/Slider';
 import Typography from '@mui/material/Typography';
 import "./App.css";
-
 class Visualizer extends React.Component {
   constructor(props) {
     super(props);
@@ -19,7 +18,7 @@ class Visualizer extends React.Component {
     };
     this.currentSortingProcessId = 0; 
   }
-  
+
   sortDescriptions = {
     bubbleSort: 'Bubble Sort is a simple sorting algorithm that repeatedly steps through the list, compares adjacent elements, and swaps them if they are in the wrong order.\n\nTime Complexity: O(n²)\nSpace Complexity: O(1)',
     insertionSort: 'Insertion Sort builds the final sorted array one item at a time. It is much less efficient on large lists than more advanced algorithms.\n\nTime Complexity: O(n²)\nSpace Complexity: O(1)',
